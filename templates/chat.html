@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adan's Medical Chatbot</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-box">
+      <!-- Header -->
+      <div class="chat-header position-relative">
+        <img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" alt="Bot Avatar">
+        <span class="online_icon"></span>
+        <div class="user_info">
+          <span>Adan’s Medical Chatbot</span>
+          <p>Always here to assist you 🩺</p>
+        </div>
+      </div>
+
+      <!-- Chat Body -->
+      <div id="chat-body" class="chat-body">
+        <div class="typing-indicator" id="typing">Bot is typing...</div>
+      </div>
+
+      <!-- Footer -->
+      <div class="chat-footer">
+        <input id="text" type="text" placeholder="Type your message..." autocomplete="off">
+        <button id="send"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      const chatBody = $("#chat-body");
+
+      function appendMessage(sender, message) {
+        const date = new Date();
+        const time = date.getHours() + ":" + String(date.getMinutes()).padStart(2, "0");
+
+        let msgHtml = `
+          <div class="msg ${sender}">
+            <img src="${sender === 'user' 
+              ? 'https://i.ibb.co/d5b84Xw/Untitled-design.png' 
+              : 'https://cdn-icons-png.flaticon.com/512/387/387569.png'}">
+            <div>
+              <div class="bubble">${message}</div>
+              <div class="time">${time}</div>
+            </div>
+          </div>
+        `;
+        chatBody.append(msgHtml);
+        chatBody.scrollTop(chatBody[0].scrollHeight);
+      }
+
+      $("#send").on("click", function(e) {
+        e.preventDefault();
+        let rawText = $("#text").val().trim();
+        if (rawText === "") return;
+
+        // User message
+        appendMessage("user", rawText);
+        $("#text").val("");
+
+        // Show typing
+        $("#typing").show();
+        chatBody.scrollTop(chatBody[0].scrollHeight);
+
+        // AJAX to backend
+        $.ajax({
+          data: { msg: rawText },
+          type: "POST",
+          url: "/get",
+        }).done(function(data) {
+          $("#typing").hide();
+          appendMessage("bot", data);
+        });
+      });
+
+      // Press Enter to send
+      $("#text").on("keypress", function(e) {
+        if (e.which === 13) $("#send").click();
+      });
+    });
+  </script>
+</body>
+</html>
